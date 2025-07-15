@@ -1,21 +1,44 @@
+from flask import Flask, request
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes
 import os
 
-# If you're using this only in Termux, you can put the token directly here:
-BOT_TOKEN = "7313598031:AAH-nxgICvUa2mNxGni043bq-u4QfXfJXUQ"
+BOT_TOKEN = os.environ.get("BOT_TOKEN")  # Don’t hardcode, use env variable on Render
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 
+app = Flask(__name__)
+
+telegram_app = Application.builder().token(BOT_TOKEN).build()
+
+# Bot command: /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("Received /start from:", update.effective_user.first_name)
-    await update.message.reply_text("👋 Hello! I am alive and running in Termux!")
+    await update.message.reply_text("👋 Hello! I'm running via webhook on Render!")
 
+# Bot command: /help
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Use /start to test me.")
+    await update.message.reply_text("ℹ️ Use /start to test me.")
+
+telegram_app.add_handler(CommandHandler("start", start))
+telegram_app.add_handler(CommandHandler("help", help_command))
+
+# This route is called by Telegram when a new message arrives
+@app.route(f"/{BOT_TOKEN}", methods=["POST"])
+async def webhook():
+    update = Update.de_json(request.get_json(force=True), telegram_app.bot)
+    await telegram_app.process_update(update)
+    return "ok"
+
+# Setup webhook when Flask starts
+@app.before_first_request
+def setup_webhook():
+    telegram_app.bot.set_webhook(url=f"{WEBHOOK_URL}/{BOT_TOKEN}")
+    print("✅ Webhook set to:", f"{WEBHOOK_URL}/{BOT_TOKEN}")
+
+# Optional health check route
+@app.route("/", methods=["GET"])
+def index():
+    return "🤖 Telegram bot is alive!"
 
 if __name__ == "__main__":
-    print("🤖 Starting bot...")
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_command))
-    print("✅ Bot is now polling... waiting for messages.")
-    app.run_polling()
+    app.run(port=5000)X
