@@ -30,10 +30,10 @@ async def webhook():
     return "ok"
 
 # Setup webhook when Flask starts
-@app.before_first_request
+@app.route("/setup-webhook", methods=["GET"])
 def setup_webhook():
     telegram_app.bot.set_webhook(url=f"{WEBHOOK_URL}/{BOT_TOKEN}")
-    print("✅ Webhook set to:", f"{WEBHOOK_URL}/{BOT_TOKEN}")
+    return "✅ Webhook has been set!"
 
 # Optional health check route
 @app.route("/", methods=["GET"])
@@ -41,4 +41,5 @@ def index():
     return "🤖 Telegram bot is alive!"
 
 if __name__ == "__main__":
+    print("🌐 Visit /setup-webhook to register your Telegram webhook.")
     app.run(port=5000)
