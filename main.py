@@ -1,4 +1,4 @@
-from flask import Flask, request
+Xfrom flask import Flask, request
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 import os
@@ -41,4 +41,4 @@ def index():
     return "🤖 Telegram bot is alive!"
 
 if __name__ == "__main__":
-    app.run(port=5000)X
+    app.run(port=5000)
