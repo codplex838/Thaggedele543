@@ -1,4 +1,4 @@
-Xfrom flask import Flask, request
+from flask import Flask, request
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 import os
